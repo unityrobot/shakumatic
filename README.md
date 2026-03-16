@@ -13,4 +13,4 @@ It’s pretty self-evident: unlike other flute calculators, this is based on the
 ### Usage
 1. Enter the total length of your bamboo in any of the top fields (cm, shaku, or inches).
 2. Ensure the "Configuration (%)" percentages match your desired tuning system.
-3. Click **Calculate** to generate the drill measurements in millimeters.
+3. Hm. Generate the drill measurements in millimeters.
