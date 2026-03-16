@@ -1,0 +1,417 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShakuMatic: The Hocchiku Calculator</title>
+<meta name="description" content="A restored 2008 JavaScript calculator for making Japanese Shakuhachi and Hocchiku flutes using the percentage method.">
+
+<!-- 
+    SHAKUMATIC (Restored 2025)
+    Original Creation: 2008 by scriptmorti
+    Vertical Mobile Layout Update
+-->
+
+<style>
+  :root {
+    --bg: #ffffff;
+    --text: #333;
+    --line-color: #444;
+    --accent: #d4af37;
+    --input-bg: #f8f8f8;
+  }
+
+  body { 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    background-color: var(--bg);
+    color: var(--text);
+    margin: 0;
+    padding: 20px;
+    line-height: 1.6;
+  }
+  
+  .container {
+    max-width: 600px; /* Slimmer container for vertical focus */
+    margin: 0 auto;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  }
+
+  h1 { 
+    margin-top: 0;
+    text-align: center;
+    font-size: 1.8rem;
+    color: #444;
+    border-bottom: 2px solid var(--accent);
+    padding-bottom: 10px;
+  }
+
+  fieldset {
+    border: 1px solid #ccc;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 6px;
+    background: #fafafa;
+  }
+
+  legend { font-weight: bold; padding: 0 5px; color: #555; }
+
+  .input-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    align-items: center;
+  }
+  
+  .input-row label { flex: 1; font-weight: 600; font-size: 0.9rem; }
+  .input-row input { flex: 1; padding: 6px; text-align: center; border: 1px solid #bbb; border-radius: 4px; }
+
+  .btn-container { text-align: center; margin: 20px 0; }
+  .shakuButton {
+    background-color: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 12px 30px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 50px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  }
+  .shakuButton:hover { background-color: #c5a028; }
+
+  /* --- VERTICAL SCHEMATIC CSS --- */
+  .schematic-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-top: 30px;
+    padding: 20px 0;
+    position: relative;
+  }
+
+  .diagram-container {
+    display: flex;
+    align-items: stretch; /* Stretch to full height */
+    gap: 15px;
+  }
+
+  /* Left Side: Total Length Dimension Line */
+  .dimension-line-col {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: space-between;
+    width: 60px;
+    padding: 10px 0;
+    border-right: 1px solid transparent; /* Spacer */
+    position: relative;
+  }
+
+  .dimension-arrow {
+    width: 1px;
+    height: 100%;
+    background-color: var(--line-color);
+    position: absolute;
+    right: 10px;
+    top: 0;
+  }
+  
+  .arrow-head-up {
+    position: absolute; right: 6px; top: 0;
+    width: 0; height: 0; 
+    border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 8px solid var(--line-color);
+  }
+  .arrow-head-down {
+    position: absolute; right: 6px; bottom: 0;
+    width: 0; height: 0; 
+    border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 8px solid var(--line-color);
+  }
+
+  /* Center: The Flute Body */
+  .flute-body-vertical {
+    width: 40px;
+    height: 500px; /* Fixed visual height for the diagram */
+    border: 2px solid var(--line-color);
+    background: linear-gradient(to right, #fff 0%, #eee 20%, #fff 100%);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    /* Holes positioned using flex percentages or absolute? Let's use Flex for even spacing in diagram mode */
+  }
+
+  .utaguchi-cap {
+    height: 40px;
+    border-bottom: 1px solid var(--line-color);
+    position: relative;
+    background: #fff;
+  }
+  
+  /* The curved notch */
+  .utaguchi-notch {
+    width: 24px;
+    height: 24px;
+    border: 2px solid var(--line-color);
+    border-top: none;
+    border-radius: 0 0 20px 20px;
+    margin: 0 auto;
+    background: #fff;
+  }
+
+  /* Container for holes to space them out visually */
+  .holes-container {
+    flex: 1;
+    position: relative;
+  }
+
+  /* Holes */
+  .hole-v {
+    width: 14px;
+    height: 14px;
+    border: 1.5px solid var(--line-color);
+    border-radius: 50%;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #fff;
+  }
+  
+  /* Positions for the diagram (Visual Approximation) */
+  .pos-h5 { top: 15%; border-style: dashed; } /* Thumb */
+  .pos-h4 { top: 30%; }
+  .pos-h3 { top: 45%; }
+  .pos-h2 { top: 60%; }
+  .pos-h1 { top: 75%; }
+
+  /* Right Side: Inputs and Leader Lines */
+  .inputs-col {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    height: 500px; /* Matches flute body height */
+    width: 160px;
+  }
+
+  .input-group-v {
+    position: absolute;
+    left: 0;
+    display: flex;
+    align-items: center;
+    width: 100%;
+  }
+
+  /* Leader lines connecting hole to text */
+  .leader-line {
+    width: 30px;
+    height: 1px;
+    background-color: var(--line-color);
+    margin-right: 5px;
+    margin-left: -20px; /* Pull into the flute area slightly */
+  }
+
+  .input-box-v {
+    width: 50px;
+    font-size: 0.85rem;
+    padding: 3px;
+    border: 1px solid #aaa;
+    text-align: center;
+    background: var(--input-bg);
+  }
+  
+  .label-v {
+    font-size: 0.8rem;
+    margin-left: 8px;
+    color: #444;
+  }
+
+  /* Align inputs with holes (Visual Approximation matching hole CSS) */
+  .inp-h5 { top: 18%; } /* adjusted for utaguchi offset */
+  .inp-h4 { top: 33%; }
+  .inp-h3 { top: 48%; }
+  .inp-h2 { top: 63%; }
+  .inp-h1 { top: 78%; }
+  
+  .inp-len { 
+    position: absolute; 
+    top: 50%; right: 70px; /* Positioned in the left column */
+    background: #fff;
+    padding: 5px;
+  }
+
+  .config-row {
+    font-size: 0.8rem;
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    border-bottom: 1px solid #eee;
+  }
+  .config-row input { width: 50px; text-align: center; }
+
+  @media (max-width: 400px) {
+    .container { padding: 10px; }
+  }
+</style>
+
+<script type="text/javascript">
+  function cmConvert() {
+      var cm = parseFloat(document.getElementById('txtone').value);
+      if(isNaN(cm)) return;
+      document.getElementById('txttwo').value = (cm / 2.54 / 12).toFixed(4);
+      document.getElementById('txtthree').value = (cm / 2.54).toFixed(2);
+  }
+
+  function feetConvert() {
+      var feet = parseFloat(document.getElementById('txttwo').value);
+      if(isNaN(feet)) return;
+      var cm = feet * 12 * 2.54;
+      document.getElementById('txtone').value = cm.toFixed(2);
+      document.getElementById('txtthree').value = (feet * 12).toFixed(2);
+  }
+
+  function inchConvert() {
+      var inches = parseFloat(document.getElementById('txtthree').value);
+      if(isNaN(inches)) return;
+      document.getElementById('txtone').value = (inches * 2.54).toFixed(2);
+      document.getElementById('txttwo').value = (inches / 12).toFixed(4);
+  }
+
+  function calculate(mainForm) {
+      var lenCM = parseFloat(document.getElementById('txtone').value);
+      if (isNaN(lenCM)) { alert("Please enter a valid length"); return; }
+      
+      var p1 = parseFloat(document.config_System.percent_1.value) || 0.785;
+      var p2 = parseFloat(document.config_System.percent_2.value) || 0.690;
+      var p3 = parseFloat(document.config_System.percent_3.value) || 0.604;
+      var p4 = parseFloat(document.config_System.percent_4.value) || 0.489;
+      var p5 = parseFloat(document.config_System.percent_5.value) || 0.428;
+
+      var percentages = [p1, p2, p3, p4, p5];
+      
+      for (var i = 0; i < 5; i++) {
+          var holeNum = i + 1;
+          var distCM = lenCM * percentages[i];
+          var distMM = distCM * 10;
+          
+          if(mainForm["milliHole" + holeNum]) mainForm["milliHole" + holeNum].value = Math.round(distMM);
+      }
+      if(mainForm["milliHole0"]) mainForm["milliHole0"].value = Math.round(lenCM * 10);
+  }
+</script>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>ShakuMatic</h1>
+    <div style="text-align:center; font-style:italic; margin-bottom:20px; font-size:0.9rem;">
+        Mobile Optimized Edition
+    </div>
+
+    <form name="shakumatic" id="shakumatic">
+        <fieldset>
+            <legend>Input Length</legend>
+             <div class="input-row">
+                 <label>Centimeters</label>
+                 <input type="text" name="cm" id="txtone" onblur="cmConvert()" value="54.86"/>
+             </div>
+             <div class="input-row">
+                 <label>Shaku (Feet)</label>
+                 <input type="text" name="feet" id="txttwo" onblur="feetConvert()" value="1.8"/>
+             </div>
+             <div class="input-row">
+                 <label>Inches</label>
+                 <input type="text" name="inch" id="txtthree" onblur="inchConvert()" value="21.6"/>
+             </div>
+             
+             <div class="btn-container">
+                <input type="button" class="shakuButton" value="Calculate" onclick="calculate(this.form)"/>
+             </div>
+        </fieldset>
+
+        <!-- VERTICAL SCHEMATIC DIAGRAM -->
+        <h3 style="text-align:center; margin-bottom:0; color:#444;">Millimeters</h3>
+        <div class="schematic-wrapper">
+            <div class="diagram-container">
+                
+                <!-- Left: Dimension Arrow -->
+                <div class="dimension-line-col">
+                    <div class="arrow-head-up"></div>
+                    <div class="dimension-arrow"></div>
+                    <!-- Total Length Input Floating Middle left -->
+                    <div style="z-index: 2; background:white; padding:5px; border:1px solid #ccc;">
+                        <input type="text" name="milliHole0" style="width:40px; border:none; text-align:center; font-weight:bold;" value="549">
+                    </div>
+                    <div class="arrow-head-down"></div>
+                </div>
+
+                <!-- Center: Flute Body -->
+                <div class="flute-body-vertical">
+                    <div class="utaguchi-cap">
+                        <div class="utaguchi-notch"></div>
+                    </div>
+                    <div class="holes-container">
+                        <div class="hole-v pos-h5"></div> <!-- Thumb -->
+                        <div class="hole-v pos-h4"></div>
+                        <div class="hole-v pos-h3"></div>
+                        <div class="hole-v pos-h2"></div>
+                        <div class="hole-v pos-h1"></div>
+                    </div>
+                    <div style="height:10px; border-top:1px solid #444;"></div> <!-- Root End -->
+                </div>
+
+                <!-- Right: Inputs & Labels -->
+                <div class="inputs-col">
+                    <!-- H5 -->
+                    <div class="input-group-v inp-h5">
+                        <div class="leader-line"></div>
+                        <input type="text" name="milliHole5" class="input-box-v">
+                        <span class="label-v">H5 (Thumb)</span>
+                    </div>
+                    <!-- H4 -->
+                    <div class="input-group-v inp-h4">
+                        <div class="leader-line"></div>
+                        <input type="text" name="milliHole4" class="input-box-v">
+                        <span class="label-v">H4</span>
+                    </div>
+                    <!-- H3 -->
+                    <div class="input-group-v inp-h3">
+                        <div class="leader-line"></div>
+                        <input type="text" name="milliHole3" class="input-box-v">
+                        <span class="label-v">H3</span>
+                    </div>
+                    <!-- H2 -->
+                    <div class="input-group-v inp-h2">
+                        <div class="leader-line"></div>
+                        <input type="text" name="milliHole2" class="input-box-v">
+                        <span class="label-v">H2</span>
+                    </div>
+                    <!-- H1 -->
+                    <div class="input-group-v inp-h1">
+                        <div class="leader-line"></div>
+                        <input type="text" name="milliHole1" class="input-box-v">
+                        <span class="label-v">H1</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </form>
+
+    <br/>
+
+    <form name="config_System" id="config_System">
+        <fieldset>
+            <legend>Configuration (%)</legend>
+            <div class="config-row"><span>Hole 1</span> <input type="text" name="percent_1" value="0.785"/></div>
+            <div class="config-row"><span>Hole 2</span> <input type="text" name="percent_2" value="0.690"/></div>
+            <div class="config-row"><span>Hole 3</span> <input type="text" name="percent_3" value="0.604"/></div>
+            <div class="config-row"><span>Hole 4</span> <input type="text" name="percent_4" value="0.489"/></div>
+            <div class="config-row"><span>Hole 5</span> <input type="text" name="percent_5" value="0.428"/></div>
+        </fieldset>
+    </form>
+</div>
+
+</body>
+</html>
